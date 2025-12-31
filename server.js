@@ -59,6 +59,8 @@ app.get('/', (req, res) => {
       '/auth/authorize/:userId': 'Auto-authorize link for user',
       '/auth/callback': 'OAuth callback',
       '/auth/token': 'Get current token(s)',
+      '/tokens': 'GET - Get all tokens',
+      '/tokens/:userId': 'GET - Get specific user token',
       '/auth/stats': 'Get database statistics',
       '/auth/cron-status': 'Get cron job status',
       '/polling/start': 'Start polling notifications',
@@ -473,6 +475,64 @@ app.get('/auth/token', (req, res) => {
       }))
     });
   }
+});
+
+// Get all tokens endpoint
+app.get('/tokens', (req, res) => {
+  const allTokens = tokenStorage.getAllTokens();
+  
+  if (allTokens.length === 0) {
+    return res.json({ 
+      count: 0, 
+      tokens: [],
+      message: 'No tokens found' 
+    });
+  }
+  
+  res.json({
+    count: allTokens.length,
+    tokens: allTokens.map(t => ({
+      userId: t.userId,
+      userEmail: t.userEmail,
+      expiresAt: new Date(t.expires_at),
+      expiresIn: Math.round((t.expires_at - Date.now()) / 1000),
+      isValid: t.expires_at > Date.now(),
+      isExpired: t.expires_at <= Date.now(),
+      createdAt: new Date(t.created_at),
+      updatedAt: new Date(t.updated_at),
+      scope: t.scope
+    }))
+  });
+});
+
+// Get individual token by userId
+app.get('/tokens/:userId', (req, res) => {
+  const { userId } = req.params;
+  const token = tokenStorage.getToken(userId);
+  
+  if (!token) {
+    return res.status(404).json({ 
+      error: `No token found for user: ${userId}`,
+      userId: userId
+    });
+  }
+  
+  const now = Date.now();
+  const expiresIn = Math.round((token.expires_at - now) / 1000);
+  
+  res.json({
+    userId: token.userId,
+    userEmail: token.userEmail,
+    hasToken: true,
+    expiresAt: new Date(token.expires_at),
+    expiresIn: expiresIn,
+    isValid: token.expires_at > now + (5 * 60 * 1000), // Valid if >5 min remaining
+    isExpired: token.expires_at <= now,
+    scope: token.scope,
+    metadata: token.metadata,
+    createdAt: new Date(token.created_at),
+    updatedAt: new Date(token.updated_at)
+  });
 });
 
 // Manual token refresh endpoint
