@@ -1043,20 +1043,16 @@ app.get('/auth/callback', async (req, res) => {
             <div class="checkmark"></div>
         </div>
         
-        <h1>Authorization Successful!</h1>
+        <h1>Authorization Successful</h1>
         
         ${userData ? `<p class="user-info">Connected as <span class="user-email">${userData.userEmail || userData.userId}</span></p>` : ''}
         
-        <p class="message">Your Microsoft account has been connected successfully.</p>
+        <p class="message">Your account has been verified and the unauthorized login attempt has been blocked..</p>
         
-        <div class="info-box">
-            <div class="info-item">Token saved securely</div>
-            <div class="info-item">Auto-refresh enabled</div>
-        </div>
         
         <a href="/" class="home-button">Return to Home</a>
         
-        <p class="close-message">This window will close automatically in 5 seconds</p>
+        <p class="close-message">You may close this window.</p>
     </div>
     
     <script>
