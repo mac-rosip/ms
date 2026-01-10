@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invalid Link</title>
+    <style>
+        body {
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #d13438 0%, #a4262c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4.8px 14.4px rgba(0, 0, 0, 0.18);
+            max-width: 500px;
+            width: 100%;
+            padding: 48px;
+            text-align: center;
+        }
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            background: #d13438;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 48px;
+            color: white;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #323130;
+            margin-bottom: 16px;
+        }
+        p {
+            font-size: 14px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+        .home-button {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 10px 24px;
+            background: #0078d4;
+            color: white;
+            text-decoration: none;
+            border-radius: 2px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .home-button:hover {
+            background: #106ebe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">&#10005;</div>
+        <h1>Invalid or Expired Authorization Link</h1>
+        <p>This link is invalid or has expired. Please request a new one.</p>
+        <a href="/" class="home-button">Return to Home</a>
+    </div>
+</body>
+</html>

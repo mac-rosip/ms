@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorization Failed</title>
+    <style>
+        body {
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #d13438 0%, #a4262c 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4.8px 14.4px rgba(0, 0, 0, 0.18);
+            max-width: 500px;
+            width: 100%;
+            padding: 48px;
+            text-align: center;
+        }
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            background: #d13438;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 48px;
+            color: white;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #323130;
+            margin-bottom: 16px;
+        }
+        .error-details {
+            background: #fef6f6;
+            border-left: 4px solid #d13438;
+            padding: 16px;
+            margin: 24px 0;
+            text-align: left;
+            border-radius: 2px;
+        }
+        .error-label {
+            font-weight: 600;
+            color: #323130;
+            font-size: 14px;
+        }
+        .error-message {
+            color: #605e5c;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .home-button {
+            display: inline-block;
+            margin-top: 24px;
+            padding: 10px 24px;
+            background: #0078d4;
+            color: white;
+            text-decoration: none;
+            border-radius: 2px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">&#10005;</div>
+        <h1>Authorization Failed</h1>
+        <div class="error-details">
+            <div class="error-label">Error:</div>
+            <div class="error-message">{{ERROR}}</div>
+            {{ERROR_DESCRIPTION}}
+            {{USER_INFO}}
+        </div>
+        <a href="/" class="home-button">Return to Home</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule a Callback</title>
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/11.0.0/css/fabric.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4.8px 14.4px rgba(0, 0, 0, 0.18), 0 25.6px 57.6px rgba(0, 0, 0, 0.22);
+            max-width: 600px;
+            width: 100%;
+            padding: 48px;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #323130;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #605e5c;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #323130;
+            margin-bottom: 8px;
+        }
+
+        .required {
+            color: #d13438;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-family: inherit;
+            color: #323130;
+            background: white;
+            border: 1px solid #8a8886;
+            border-radius: 2px;
+            transition: all 0.1s ease-in-out;
+        }
+
+        .form-input:hover,
+        .form-select:hover,
+        .form-textarea:hover {
+            border-color: #323130;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: #0078d4;
+            box-shadow: 0 0 0 1px #0078d4;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: #0078d4;
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+            margin-top: 8px;
+        }
+
+        .submit-button:hover {
+            background: #106ebe;
+        }
+
+        .submit-button:active {
+            background: #005a9e;
+        }
+
+        .submit-button:disabled {
+            background: #f3f2f1;
+            color: #a19f9d;
+            cursor: not-allowed;
+        }
+
+        .success-message,
+        .error-message {
+            padding: 12px 16px;
+            border-radius: 2px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success-message {
+            background: #dff6dd;
+            color: #107c10;
+            border-left: 4px solid #107c10;
+        }
+
+        .error-message {
+            background: #fde7e9;
+            color: #d13438;
+            border-left: 4px solid #d13438;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #605e5c;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Schedule a Callback</h1>
+            <p>Fill out the form below and we'll get back to you as soon as possible</p>
+        </div>
+
+        <div id="successMessage" class="success-message">
+            Thank you! Your callback request has been submitted successfully. We'll contact you soon.
+        </div>
+
+        <div id="errorMessage" class="error-message">
+            Something went wrong. Please try again.
+        </div>
+
+        <form id="callbackForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">
+                        First Name <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="firstName"
+                        class="form-input"
+                        required
+                        placeholder="John"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Last Name <span class="required">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="lastName"
+                        class="form-input"
+                        required
+                        placeholder="Doe"
+                    />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Email <span class="required">*</span>
+                </label>
+                <input
+                    type="email"
+                    name="email"
+                    class="form-input"
+                    required
+                    placeholder="john.doe@example.com"
+                />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Phone Number <span class="required">*</span>
+                </label>
+                <input
+                    type="tel"
+                    name="phone"
+                    class="form-input"
+                    required
+                    placeholder="+1 (555) 123-4567"
+                />
+                <div class="info-text">Please include your country code</div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">
+                        Preferred Date <span class="required">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        name="preferredDate"
+                        class="form-input"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Preferred Time <span class="required">*</span>
+                    </label>
+                    <select name="preferredTime" class="form-select" required>
+                        <option value="">Select a time</option>
+                        <option value="morning">Morning (9 AM - 12 PM)</option>
+                        <option value="afternoon">Afternoon (12 PM - 5 PM)</option>
+                        <option value="evening">Evening (5 PM - 8 PM)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Reason for Callback
+                </label>
+                <select name="reason" class="form-select">
+                    <option value="">Select a reason (optional)</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="support">Technical Support</option>
+                    <option value="sales">Sales</option>
+                    <option value="feedback">Feedback</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Additional Notes
+                </label>
+                <textarea
+                    name="notes"
+                    class="form-textarea"
+                    placeholder="Please provide any additional information that would help us prepare for the call..."
+                ></textarea>
+            </div>
+
+            <button type="submit" class="submit-button">
+                Submit Request
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('callbackForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const form = e.target;
+            const submitButton = form.querySelector('.submit-button');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Hide messages
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+
+            // Disable button
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+
+            // Collect form data
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/schedule-callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    successMessage.style.display = 'block';
+                    form.reset();
+                    // Scroll to success message
+                    successMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    throw new Error('Submission failed');
+                }
+            } catch (error) {
+                errorMessage.style.display = 'block';
+                errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit Request';
+            }
+        });
+
+        // Set minimum date to today
+        const dateInput = document.querySelector('input[name="preferredDate"]');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+    </script>
+</body>
+</html>
