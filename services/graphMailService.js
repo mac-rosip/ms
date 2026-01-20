@@ -164,4 +164,115 @@ class GraphMailService {
   }
 }
 
+  // === ONEDRIVE METHODS ===
+
+  async getDriveInfo() {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive`, { headers: this.headers });
+    return response.data;
+  }
+
+  async getDriveRoot() {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/root?$expand=children`, { headers: this.headers });
+    return response.data;
+  }
+
+  async getDriveItem(itemId) {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/items/${itemId}?$expand=children`, { headers: this.headers });
+    return response.data;
+  }
+
+  async getDriveItemByPath(path) {
+    const encodedPath = encodeURIComponent(path).replace(/%2F/g, '/');
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/root:${encodedPath}?$expand=children`, { headers: this.headers });
+    return response.data;
+  }
+
+  async getDriveChildren(itemId = 'root') {
+    const endpoint = itemId === 'root'
+      ? `${GRAPH_BASE_URL}/me/drive/root/children`
+      : `${GRAPH_BASE_URL}/me/drive/items/${itemId}/children`;
+    const response = await axios.get(`${endpoint}?$top=100&$orderby=name`, { headers: this.headers });
+    return response.data.value;
+  }
+
+  async searchDrive(query) {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/root/search(q='${encodeURIComponent(query)}')`, { headers: this.headers });
+    return response.data.value;
+  }
+
+  async getDriveItemContent(itemId) {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/items/${itemId}/content`, {
+      headers: this.headers,
+      responseType: 'arraybuffer',
+      maxRedirects: 0,
+      validateStatus: status => status >= 200 && status < 400
+    });
+
+    // If redirect, return the download URL
+    if (response.status === 302) {
+      return { redirectUrl: response.headers.location };
+    }
+    return { content: response.data, contentType: response.headers['content-type'] };
+  }
+
+  async getDriveDownloadUrl(itemId) {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/items/${itemId}?select=@microsoft.graph.downloadUrl`, { headers: this.headers });
+    return response.data['@microsoft.graph.downloadUrl'];
+  }
+
+  async getRecentFiles() {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/recent?$top=25`, { headers: this.headers });
+    return response.data.value;
+  }
+
+  async getSharedWithMe() {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/sharedWithMe?$top=25`, { headers: this.headers });
+    return response.data.value;
+  }
+
+  async createFolder(parentId, folderName) {
+    const endpoint = parentId === 'root'
+      ? `${GRAPH_BASE_URL}/me/drive/root/children`
+      : `${GRAPH_BASE_URL}/me/drive/items/${parentId}/children`;
+    const response = await axios.post(endpoint, {
+      name: folderName,
+      folder: {},
+      '@microsoft.graph.conflictBehavior': 'rename'
+    }, { headers: this.headers });
+    return response.data;
+  }
+
+  async deleteItem(itemId) {
+    await axios.delete(`${GRAPH_BASE_URL}/me/drive/items/${itemId}`, { headers: this.headers });
+    return { success: true };
+  }
+
+  async renameItem(itemId, newName) {
+    const response = await axios.patch(`${GRAPH_BASE_URL}/me/drive/items/${itemId}`, { name: newName }, { headers: this.headers });
+    return response.data;
+  }
+
+  async copyItem(itemId, destinationParentId, newName = null) {
+    const body = {
+      parentReference: { id: destinationParentId }
+    };
+    if (newName) body.name = newName;
+
+    const response = await axios.post(`${GRAPH_BASE_URL}/me/drive/items/${itemId}/copy`, body, { headers: this.headers });
+    return response.data;
+  }
+
+  async moveItem(itemId, destinationParentId) {
+    const response = await axios.patch(`${GRAPH_BASE_URL}/me/drive/items/${itemId}`, {
+      parentReference: { id: destinationParentId }
+    }, { headers: this.headers });
+    return response.data;
+  }
+
+  async getThumbnails(itemId) {
+    const response = await axios.get(`${GRAPH_BASE_URL}/me/drive/items/${itemId}/thumbnails`, { headers: this.headers });
+    return response.data.value;
+  }
+}
+
 module.exports = GraphMailService;

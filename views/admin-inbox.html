@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Inbox</title>
+  <title>Admin Panel</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -22,11 +22,17 @@
     body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; color: var(--text-primary); height: 100vh; overflow: hidden; }
     .header { height: 48px; background: var(--primary); color: white; display: flex; align-items: center; padding: 0 16px; gap: 16px; }
     .header h1 { font-size: 16px; font-weight: 600; }
+    .tab-switcher { display: flex; gap: 4px; margin-left: 24px; }
+    .tab-btn { background: rgba(255,255,255,0.1); border: none; color: white; padding: 8px 16px; border-radius: 4px 4px 0 0; cursor: pointer; font-size: 14px; }
+    .tab-btn:hover { background: rgba(255,255,255,0.2); }
+    .tab-btn.active { background: white; color: var(--primary); font-weight: 600; }
     .account-selector { display: flex; align-items: center; gap: 8px; margin-left: auto; }
     .account-selector select { padding: 6px 12px; border-radius: 4px; border: none; font-size: 14px; min-width: 200px; }
     .refresh-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; }
     .refresh-btn:hover { background: rgba(255,255,255,0.3); }
     .main-container { display: flex; height: calc(100vh - 48px); }
+    .tab-content { display: none; width: 100%; height: 100%; }
+    .tab-content.active { display: flex; }
     .sidebar { width: 200px; background: var(--sidebar-bg); border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
     .compose-btn { display: flex; align-items: center; gap: 8px; margin: 12px; padding: 10px 16px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; width: calc(100% - 24px); }
     .compose-btn:hover { background: var(--primary-dark); }
@@ -37,41 +43,52 @@
     .folder-item .icon { width: 20px; text-align: center; color: var(--text-secondary); }
     .folder-item .count { margin-left: auto; font-size: 12px; color: var(--text-muted); }
     .folder-item .unread-count { background: var(--primary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-    .message-list-container { width: 360px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; }
+    .message-list-container, .file-list-container { width: 360px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; }
     .search-bar { padding: 12px; border-bottom: 1px solid var(--border-color); }
     .search-bar input { width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; }
     .search-bar input:focus { outline: none; border-color: var(--primary); }
-    .message-list-toolbar { display: flex; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border-color); gap: 8px; background: var(--sidebar-bg); }
+    .list-toolbar { display: flex; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border-color); gap: 8px; background: var(--sidebar-bg); }
     .toolbar-btn { background: none; border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; color: var(--text-secondary); }
     .toolbar-btn:hover { background: var(--sidebar-hover); }
-    .message-list { flex: 1; overflow-y: auto; list-style: none; }
+    .message-list, .file-list { flex: 1; overflow-y: auto; list-style: none; }
     .message-item { display: flex; flex-direction: column; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; background: #faf9f8; }
     .message-item.unread { background: #fff; }
-    .message-item:hover { background: var(--sidebar-hover); }
-    .message-item.selected { background: var(--selected-bg); }
+    .message-item:hover, .file-item:hover { background: var(--sidebar-hover); }
+    .message-item.selected, .file-item.selected { background: var(--selected-bg); }
     .message-item .sender { font-weight: 600; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
     .message-item.unread .sender { color: var(--primary); }
     .message-item .subject { font-size: 13px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .message-item .preview { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .message-item .meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; color: var(--text-muted); }
+    .message-item .meta, .file-item .meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; color: var(--text-muted); }
+    .file-item { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; gap: 12px; }
+    .file-item .file-icon { font-size: 24px; width: 32px; text-align: center; }
+    .file-item .file-info { flex: 1; min-width: 0; }
+    .file-item .file-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-item.folder .file-name { color: var(--primary); }
     .load-more { padding: 16px; text-align: center; }
     .load-more button { background: none; border: 1px solid var(--border-color); padding: 8px 24px; border-radius: 4px; cursor: pointer; color: var(--primary); }
-    .message-detail { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .message-detail-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); }
-    .message-detail-toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
+    .detail-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .detail-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); }
+    .detail-toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .detail-btn { display: flex; align-items: center; gap: 4px; background: none; border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; color: var(--text-secondary); }
     .detail-btn:hover { background: var(--sidebar-hover); }
     .detail-btn.danger:hover { background: #fde7e9; border-color: var(--danger); color: var(--danger); }
-    .message-subject { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
-    .message-meta { display: flex; gap: 16px; align-items: flex-start; }
-    .sender-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; flex-shrink: 0; }
-    .sender-info { flex: 1; }
+    .detail-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .detail-btn.primary:hover { background: var(--primary-dark); }
+    .message-subject, .file-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
+    .message-meta, .file-meta-info { display: flex; gap: 16px; align-items: flex-start; }
+    .sender-avatar, .file-icon-large { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; flex-shrink: 0; }
+    .file-icon-large { font-size: 24px; border-radius: 8px; }
+    .sender-info, .file-details { flex: 1; }
     .sender-name { font-weight: 600; font-size: 14px; }
-    .sender-email { font-size: 12px; color: var(--text-muted); }
+    .sender-email, .file-path { font-size: 12px; color: var(--text-muted); }
     .recipient-info { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
     .message-date { font-size: 12px; color: var(--text-muted); }
     .message-body { flex: 1; overflow-y: auto; padding: 24px; }
     .message-body iframe { width: 100%; height: 100%; border: none; }
+    .file-preview { flex: 1; overflow: auto; padding: 24px; display: flex; align-items: center; justify-content: center; background: var(--sidebar-bg); }
+    .file-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .file-preview iframe { width: 100%; height: 100%; border: none; background: white; }
     .attachments-section { padding: 16px 24px; border-top: 1px solid var(--border-color); background: var(--sidebar-bg); }
     .attachments-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
     .attachment-list { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -79,6 +96,11 @@
     .attachment-item:hover { background: var(--sidebar-hover); }
     .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); }
     .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
+    .breadcrumb { display: flex; align-items: center; gap: 4px; padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-size: 13px; flex-wrap: wrap; }
+    .breadcrumb-item { color: var(--primary); cursor: pointer; }
+    .breadcrumb-item:hover { text-decoration: underline; }
+    .breadcrumb-separator { color: var(--text-muted); }
+    .breadcrumb-current { color: var(--text-primary); }
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; }
     .modal-overlay.active { display: flex; }
     .compose-modal { background: white; width: 600px; max-width: 90vw; max-height: 80vh; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
@@ -106,34 +128,75 @@
     .toast.error { background: var(--danger); }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     .select-all-container { display: flex; align-items: center; gap: 8px; }
+    .drive-sidebar { padding: 12px; }
+    .drive-nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-bottom: 4px; }
+    .drive-nav-item:hover { background: var(--sidebar-hover); }
+    .drive-nav-item.active { background: var(--selected-bg); font-weight: 600; }
+    .drive-nav-item .icon { font-size: 18px; }
+    .storage-info { margin-top: 16px; padding: 12px; background: white; border-radius: 4px; }
+    .storage-bar { height: 4px; background: var(--border-color); border-radius: 2px; margin: 8px 0; }
+    .storage-bar-fill { height: 100%; background: var(--primary); border-radius: 2px; }
+    .storage-text { font-size: 11px; color: var(--text-muted); }
   </style>
 </head>
 <body>
   <header class="header">
-    <h1>Admin Inbox</h1>
+    <h1>Admin Panel</h1>
+    <div class="tab-switcher">
+      <button class="tab-btn active" onclick="switchTab('mail')">Mail</button>
+      <button class="tab-btn" onclick="switchTab('drive')">OneDrive</button>
+    </div>
     <div class="account-selector">
       <select id="accountSelect"><option value="">Select an account...</option></select>
       <button class="refresh-btn" onclick="refreshAccounts()">Refresh</button>
     </div>
   </header>
+
   <div class="main-container">
-    <aside class="sidebar" id="sidebar">
-      <button class="compose-btn" onclick="openCompose()"><span>+</span> New Message</button>
-      <ul class="folder-list" id="folderList"></ul>
-    </aside>
-    <div class="message-list-container" id="messageListContainer">
-      <div class="search-bar"><input type="text" id="searchInput" placeholder="Search messages..." onkeypress="handleSearch(event)"></div>
-      <div class="message-list-toolbar">
-        <div class="select-all-container"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"><label for="selectAll" style="font-size:12px;">Select all</label></div>
-        <button class="toolbar-btn" onclick="markSelectedRead(true)">Mark read</button>
-        <button class="toolbar-btn" onclick="markSelectedRead(false)">Mark unread</button>
-        <button class="toolbar-btn" onclick="deleteSelected()">Delete</button>
+    <!-- MAIL TAB -->
+    <div class="tab-content active" id="mailTab">
+      <aside class="sidebar">
+        <button class="compose-btn" onclick="openCompose()"><span>+</span> New Message</button>
+        <ul class="folder-list" id="folderList"></ul>
+      </aside>
+      <div class="message-list-container">
+        <div class="search-bar"><input type="text" id="searchInput" placeholder="Search messages..." onkeypress="handleSearch(event)"></div>
+        <div class="list-toolbar">
+          <div class="select-all-container"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"><label for="selectAll" style="font-size:12px;">All</label></div>
+          <button class="toolbar-btn" onclick="markSelectedRead(true)">Read</button>
+          <button class="toolbar-btn" onclick="markSelectedRead(false)">Unread</button>
+          <button class="toolbar-btn" onclick="deleteSelected()">Delete</button>
+        </div>
+        <ul class="message-list" id="messageList"></ul>
+        <div class="load-more" id="loadMore" style="display:none;"><button onclick="loadMoreMessages()">Load more</button></div>
       </div>
-      <ul class="message-list" id="messageList"></ul>
-      <div class="load-more" id="loadMore" style="display:none;"><button onclick="loadMoreMessages()">Load more</button></div>
+      <div class="detail-panel" id="messageDetail"><div class="empty-state"><div class="icon">&#128236;</div><p>Select a message to read</p></div></div>
     </div>
-    <div class="message-detail" id="messageDetail"><div class="empty-state"><div class="icon">&#128236;</div><p>Select a message to read</p></div></div>
+
+    <!-- ONEDRIVE TAB -->
+    <div class="tab-content" id="driveTab">
+      <aside class="sidebar">
+        <div class="drive-sidebar">
+          <div class="drive-nav-item active" onclick="loadDriveSection('files')"><span class="icon">&#128193;</span>My files</div>
+          <div class="drive-nav-item" onclick="loadDriveSection('recent')"><span class="icon">&#128336;</span>Recent</div>
+          <div class="drive-nav-item" onclick="loadDriveSection('shared')"><span class="icon">&#128101;</span>Shared</div>
+          <div class="storage-info" id="storageInfo"></div>
+        </div>
+      </aside>
+      <div class="file-list-container">
+        <div class="search-bar"><input type="text" id="driveSearchInput" placeholder="Search files..." onkeypress="handleDriveSearch(event)"></div>
+        <div class="breadcrumb" id="breadcrumb"></div>
+        <div class="list-toolbar">
+          <button class="toolbar-btn" onclick="createFolder()">+ New folder</button>
+          <button class="toolbar-btn" onclick="refreshDrive()">Refresh</button>
+        </div>
+        <ul class="file-list" id="fileList"></ul>
+      </div>
+      <div class="detail-panel" id="fileDetail"><div class="empty-state"><div class="icon">&#128194;</div><p>Select a file to preview</p></div></div>
+    </div>
   </div>
+
+  <!-- Compose Modal -->
   <div class="modal-overlay" id="composeModal">
     <div class="compose-modal">
       <div class="compose-header"><h3 id="composeTitle">New Message</h3><button class="close-btn" onclick="closeCompose()">&times;</button></div>
@@ -146,15 +209,33 @@
       <div class="compose-footer"><button class="discard-btn" onclick="closeCompose()">Discard</button><button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button></div>
     </div>
   </div>
+
   <div class="toast-container" id="toastContainer"></div>
+
   <script>
-    let currentUserId = null, currentFolder = 'inbox', currentMessages = [], currentMessage = null, selectedMessages = new Set(), skip = 0;
+    // === STATE ===
+    let currentUserId = null, currentTab = 'mail';
+    // Mail state
+    let currentFolder = 'inbox', currentMessages = [], currentMessage = null, selectedMessages = new Set(), skip = 0;
     const pageSize = 25;
     let folders = [], composeMode = 'new', replyToMessageId = null;
     const folderIcons = { 'inbox': '&#128229;', 'drafts': '&#128221;', 'sentitems': '&#128228;', 'deleteditems': '&#128465;', 'junkemail': '&#128683;', 'archive': '&#128451;', 'default': '&#128193;' };
+    // Drive state
+    let currentDriveSection = 'files', currentFolderId = 'root', currentFiles = [], currentFile = null, folderHistory = [{ id: 'root', name: 'My files' }];
 
     document.addEventListener('DOMContentLoaded', () => loadAccounts());
 
+    // === TAB SWITCHING ===
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`).classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById(tab + 'Tab').classList.add('active');
+      if (tab === 'drive' && currentUserId && currentFiles.length === 0) loadDrive();
+    }
+
+    // === ACCOUNTS ===
     async function loadAccounts() {
       try {
         const response = await fetch('/tokens');
@@ -170,17 +251,19 @@
             select.appendChild(option);
           });
         }
-        select.addEventListener('change', (e) => { if (e.target.value) selectAccount(e.target.value); });
+        select.onchange = (e) => { if (e.target.value) selectAccount(e.target.value); };
       } catch (error) { showToast('Failed to load accounts', 'error'); }
     }
-
     function refreshAccounts() { loadAccounts(); showToast('Accounts refreshed'); }
-
     async function selectAccount(userId) {
-      currentUserId = userId; currentFolder = 'inbox'; currentMessages = []; currentMessage = null; selectedMessages.clear(); skip = 0;
+      currentUserId = userId;
+      currentFolder = 'inbox'; currentMessages = []; currentMessage = null; selectedMessages.clear(); skip = 0;
+      currentFolderId = 'root'; currentFiles = []; currentFile = null; folderHistory = [{ id: 'root', name: 'My files' }];
       await Promise.all([loadFolders(), loadMessages()]);
+      if (currentTab === 'drive') loadDrive();
     }
 
+    // === MAIL FUNCTIONS ===
     async function loadFolders() {
       if (!currentUserId) return;
       const folderList = document.getElementById('folderList');
@@ -193,292 +276,319 @@
           const aIdx = wellKnown.indexOf(a.displayName.toLowerCase().replace(' ', ''));
           const bIdx = wellKnown.indexOf(b.displayName.toLowerCase().replace(' ', ''));
           if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-          if (aIdx !== -1) return -1;
-          if (bIdx !== -1) return 1;
+          if (aIdx !== -1) return -1; if (bIdx !== -1) return 1;
           return a.displayName.localeCompare(b.displayName);
         });
         renderFolders();
-      } catch (error) { folderList.innerHTML = '<li class="empty-state">Failed to load folders</li>'; showToast('Failed to load folders', 'error'); }
+      } catch (error) { folderList.innerHTML = '<li class="empty-state">Failed to load</li>'; }
     }
-
     function renderFolders() {
-      const folderList = document.getElementById('folderList');
-      folderList.innerHTML = folders.map(folder => {
-        const folderKey = folder.displayName.toLowerCase().replace(' ', '');
-        const icon = folderIcons[folderKey] || folderIcons.default;
-        const isActive = folder.id === currentFolder || folderKey === currentFolder;
-        const unreadBadge = folder.unreadItemCount > 0 ? `<span class="unread-count">${folder.unreadItemCount}</span>` : '';
-        const countBadge = folder.totalItemCount > 0 && folder.unreadItemCount === 0 ? `<span class="count">${folder.totalItemCount}</span>` : '';
-        return `<li class="folder-item ${isActive ? 'active' : ''}" onclick="selectFolder('${folder.id}')"><span class="icon">${icon}</span><span>${folder.displayName}</span>${unreadBadge}${countBadge}</li>`;
+      document.getElementById('folderList').innerHTML = folders.map(f => {
+        const key = f.displayName.toLowerCase().replace(' ', ''), icon = folderIcons[key] || folderIcons.default;
+        const isActive = f.id === currentFolder || key === currentFolder;
+        const badge = f.unreadItemCount > 0 ? `<span class="unread-count">${f.unreadItemCount}</span>` : (f.totalItemCount > 0 ? `<span class="count">${f.totalItemCount}</span>` : '');
+        return `<li class="folder-item ${isActive ? 'active' : ''}" onclick="selectFolder('${f.id}')"><span class="icon">${icon}</span><span>${f.displayName}</span>${badge}</li>`;
       }).join('');
     }
-
     async function selectFolder(folderId) {
       currentFolder = folderId; currentMessages = []; currentMessage = null; selectedMessages.clear(); skip = 0;
-      document.querySelectorAll('.folder-item').forEach(item => item.classList.remove('active'));
+      document.querySelectorAll('.folder-item').forEach(i => i.classList.remove('active'));
       event.target.closest('.folder-item').classList.add('active');
       await loadMessages();
     }
-
     async function loadMessages(append = false) {
       if (!currentUserId) return;
-      const messageList = document.getElementById('messageList');
-      if (!append) messageList.innerHTML = '<li class="loading"><div class="spinner"></div></li>';
+      const list = document.getElementById('messageList');
+      if (!append) list.innerHTML = '<li class="loading"><div class="spinner"></div></li>';
       try {
-        const response = await fetch(`/inbox/${currentUserId}/folders/${currentFolder}/messages?top=${pageSize}&skip=${skip}`);
-        const data = await response.json();
+        const res = await fetch(`/inbox/${currentUserId}/folders/${currentFolder}/messages?top=${pageSize}&skip=${skip}`);
+        const data = await res.json();
         currentMessages = append ? [...currentMessages, ...data.messages] : data.messages;
         renderMessages();
         document.getElementById('loadMore').style.display = data.messages.length === pageSize ? 'block' : 'none';
-      } catch (error) { messageList.innerHTML = '<li class="empty-state">Failed to load messages</li>'; showToast('Failed to load messages', 'error'); }
+      } catch (e) { list.innerHTML = '<li class="empty-state">Failed to load</li>'; }
     }
-
     function loadMoreMessages() { skip += pageSize; loadMessages(true); }
-
     function renderMessages() {
-      const messageList = document.getElementById('messageList');
-      if (currentMessages.length === 0) { messageList.innerHTML = '<li class="empty-state">No messages</li>'; return; }
-      messageList.innerHTML = currentMessages.map(msg => {
-        const sender = msg.from?.emailAddress?.name || msg.from?.emailAddress?.address || 'Unknown';
-        const date = formatDate(msg.receivedDateTime);
-        const isSelected = currentMessage?.id === msg.id;
-        const isChecked = selectedMessages.has(msg.id);
-        return `<li class="message-item ${msg.isRead ? '' : 'unread'} ${isSelected ? 'selected' : ''}" onclick="selectMessage('${msg.id}', event)">
-          <input type="checkbox" class="message-checkbox" ${isChecked ? 'checked' : ''} onclick="toggleMessageSelection('${msg.id}', event)">
-          <div class="sender">${msg.hasAttachments ? '<span>&#128206;</span>' : ''}${sender}</div>
-          <div class="subject">${msg.subject || '(No subject)'}</div>
-          <div class="preview">${msg.bodyPreview || ''}</div>
-          <div class="meta"><span>${date}</span>${msg.importance === 'high' ? '<span style="color:var(--danger);">!</span>' : ''}</div></li>`;
+      const list = document.getElementById('messageList');
+      if (!currentMessages.length) { list.innerHTML = '<li class="empty-state">No messages</li>'; return; }
+      list.innerHTML = currentMessages.map(m => {
+        const sender = m.from?.emailAddress?.name || m.from?.emailAddress?.address || 'Unknown';
+        return `<li class="message-item ${m.isRead ? '' : 'unread'} ${currentMessage?.id === m.id ? 'selected' : ''}" onclick="selectMessage('${m.id}', event)">
+          <input type="checkbox" class="message-checkbox" ${selectedMessages.has(m.id) ? 'checked' : ''} onclick="toggleMessageSelection('${m.id}', event)">
+          <div class="sender">${m.hasAttachments ? '&#128206; ' : ''}${sender}</div>
+          <div class="subject">${m.subject || '(No subject)'}</div>
+          <div class="preview">${m.bodyPreview || ''}</div>
+          <div class="meta"><span>${formatDate(m.receivedDateTime)}</span></div></li>`;
       }).join('');
     }
-
-    async function selectMessage(messageId, event) {
+    async function selectMessage(id, event) {
       if (event.target.type === 'checkbox') return;
-      const messageDetail = document.getElementById('messageDetail');
-      messageDetail.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      document.getElementById('messageDetail').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
       try {
-        const response = await fetch(`/inbox/${currentUserId}/messages/${messageId}`);
-        currentMessage = await response.json();
+        currentMessage = await (await fetch(`/inbox/${currentUserId}/messages/${id}`)).json();
         if (!currentMessage.isRead) {
-          await fetch(`/inbox/${currentUserId}/messages/${messageId}/read`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isRead: true }) });
-          const msgIdx = currentMessages.findIndex(m => m.id === messageId);
-          if (msgIdx !== -1) currentMessages[msgIdx].isRead = true;
+          await fetch(`/inbox/${currentUserId}/messages/${id}/read`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isRead: true }) });
+          const idx = currentMessages.findIndex(m => m.id === id);
+          if (idx !== -1) currentMessages[idx].isRead = true;
           renderMessages(); loadFolders();
         }
         let attachments = [];
-        if (currentMessage.hasAttachments) {
-          const attResponse = await fetch(`/inbox/${currentUserId}/messages/${messageId}/attachments`);
-          attachments = await attResponse.json();
-        }
+        if (currentMessage.hasAttachments) attachments = await (await fetch(`/inbox/${currentUserId}/messages/${id}/attachments`)).json();
         renderMessageDetail(currentMessage, attachments);
-      } catch (error) { messageDetail.innerHTML = '<div class="empty-state">Failed to load message</div>'; showToast('Failed to load message', 'error'); }
+      } catch (e) { document.getElementById('messageDetail').innerHTML = '<div class="empty-state">Failed to load</div>'; }
     }
-
-    function renderMessageDetail(message, attachments = []) {
-      const sender = message.from?.emailAddress;
-      const senderInitial = (sender?.name || sender?.address || 'U')[0].toUpperCase();
-      const toRecipients = message.toRecipients?.map(r => r.emailAddress.address).join(', ') || '';
-      const ccRecipients = message.ccRecipients?.map(r => r.emailAddress.address).join(', ') || '';
-      let attachmentsHtml = '';
-      if (attachments.length > 0) {
-        attachmentsHtml = `<div class="attachments-section"><div class="attachments-title">Attachments (${attachments.length})</div><div class="attachment-list">${attachments.map(att => `<a class="attachment-item" href="/inbox/${currentUserId}/messages/${message.id}/attachments/${att.id}/download" target="_blank"><span>&#128206;</span><span>${att.name}</span><span style="color:var(--text-muted);">(${formatFileSize(att.size)})</span></a>`).join('')}</div></div>`;
-      }
-      const messageDetail = document.getElementById('messageDetail');
-      messageDetail.innerHTML = `<div class="message-detail-header">
-        <div class="message-detail-toolbar">
-          <button class="detail-btn" onclick="replyMessage()"><span>&#8617;</span> Reply</button>
-          <button class="detail-btn" onclick="replyAllMessage()"><span>&#8617;&#8617;</span> Reply All</button>
-          <button class="detail-btn" onclick="forwardMessage()"><span>&#8618;</span> Forward</button>
-          <button class="detail-btn" onclick="toggleReadStatus()">${message.isRead ? 'Mark unread' : 'Mark read'}</button>
-          <button class="detail-btn danger" onclick="deleteCurrentMessage()"><span>&#128465;</span> Delete</button>
+    function renderMessageDetail(msg, attachments = []) {
+      const sender = msg.from?.emailAddress, init = (sender?.name || sender?.address || 'U')[0].toUpperCase();
+      const to = msg.toRecipients?.map(r => r.emailAddress.address).join(', ') || '';
+      const cc = msg.ccRecipients?.map(r => r.emailAddress.address).join(', ') || '';
+      let attHtml = attachments.length ? `<div class="attachments-section"><div class="attachments-title">Attachments (${attachments.length})</div><div class="attachment-list">${attachments.map(a => `<a class="attachment-item" href="/inbox/${currentUserId}/messages/${msg.id}/attachments/${a.id}/download" target="_blank">&#128206; ${a.name} <span style="color:var(--text-muted);">(${formatFileSize(a.size)})</span></a>`).join('')}</div></div>` : '';
+      document.getElementById('messageDetail').innerHTML = `<div class="detail-header">
+        <div class="detail-toolbar">
+          <button class="detail-btn" onclick="replyMessage()">&#8617; Reply</button>
+          <button class="detail-btn" onclick="replyAllMessage()">&#8617;&#8617; Reply All</button>
+          <button class="detail-btn" onclick="forwardMessage()">&#8618; Forward</button>
+          <button class="detail-btn" onclick="toggleReadStatus()">${msg.isRead ? 'Mark unread' : 'Mark read'}</button>
+          <button class="detail-btn danger" onclick="deleteCurrentMessage()">&#128465; Delete</button>
         </div>
-        <h2 class="message-subject">${message.subject || '(No subject)'}</h2>
+        <h2 class="message-subject">${msg.subject || '(No subject)'}</h2>
         <div class="message-meta">
-          <div class="sender-avatar">${senderInitial}</div>
-          <div class="sender-info"><div class="sender-name">${sender?.name || sender?.address || 'Unknown'}</div><div class="sender-email">${sender?.address || ''}</div><div class="recipient-info">To: ${toRecipients}${ccRecipients ? `<br>Cc: ${ccRecipients}` : ''}</div></div>
-          <div class="message-date">${formatDateTime(message.receivedDateTime)}</div>
+          <div class="sender-avatar">${init}</div>
+          <div class="sender-info"><div class="sender-name">${sender?.name || sender?.address || 'Unknown'}</div><div class="sender-email">${sender?.address || ''}</div><div class="recipient-info">To: ${to}${cc ? '<br>Cc: ' + cc : ''}</div></div>
+          <div class="message-date">${formatDateTime(msg.receivedDateTime)}</div>
         </div></div>
-        <div class="message-body"><iframe id="messageBodyFrame" sandbox="allow-same-origin"></iframe></div>${attachmentsHtml}`;
-      const iframe = document.getElementById('messageBodyFrame');
-      const bodyContent = message.body?.content || '';
-      const bodyType = message.body?.contentType || 'text';
-      iframe.onload = () => {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        if (bodyType.toLowerCase() === 'html') {
-          doc.write(`<!DOCTYPE html><html><head><style>body{font-family:'Segoe UI',sans-serif;font-size:14px;line-height:1.5;color:#323130;margin:0;padding:0;}img{max-width:100%;height:auto;}a{color:#0078d4;}</style></head><body>${bodyContent}</body></html>`);
-        } else {
-          doc.write(`<pre style="font-family:'Segoe UI',sans-serif;white-space:pre-wrap;margin:0;">${bodyContent}</pre>`);
-        }
-        doc.close();
-      };
+        <div class="message-body"><iframe id="messageBodyFrame" sandbox="allow-same-origin"></iframe></div>${attHtml}`;
+      const iframe = document.getElementById('messageBodyFrame'), body = msg.body?.content || '', type = msg.body?.contentType || 'text';
+      iframe.onload = () => { const doc = iframe.contentDocument; doc.open(); doc.write(type.toLowerCase() === 'html' ? `<!DOCTYPE html><html><head><style>body{font-family:'Segoe UI',sans-serif;font-size:14px;line-height:1.5;margin:0;}img{max-width:100%;}a{color:#0078d4;}</style></head><body>${body}</body></html>` : `<pre style="font-family:'Segoe UI',sans-serif;white-space:pre-wrap;margin:0;">${body}</pre>`); doc.close(); };
       iframe.src = 'about:blank';
     }
-
-    function toggleMessageSelection(messageId, event) {
-      event.stopPropagation();
-      if (selectedMessages.has(messageId)) selectedMessages.delete(messageId); else selectedMessages.add(messageId);
-      renderMessages(); updateSelectAllState();
-    }
-
-    function toggleSelectAll() {
-      const selectAll = document.getElementById('selectAll');
-      if (selectAll.checked) currentMessages.forEach(m => selectedMessages.add(m.id)); else selectedMessages.clear();
-      renderMessages();
-    }
-
-    function updateSelectAllState() {
-      const selectAll = document.getElementById('selectAll');
-      selectAll.checked = currentMessages.length > 0 && selectedMessages.size === currentMessages.length;
-      selectAll.indeterminate = selectedMessages.size > 0 && selectedMessages.size < currentMessages.length;
-    }
-
+    function toggleMessageSelection(id, e) { e.stopPropagation(); selectedMessages.has(id) ? selectedMessages.delete(id) : selectedMessages.add(id); renderMessages(); }
+    function toggleSelectAll() { document.getElementById('selectAll').checked ? currentMessages.forEach(m => selectedMessages.add(m.id)) : selectedMessages.clear(); renderMessages(); }
     async function markSelectedRead(isRead) {
-      if (selectedMessages.size === 0) { showToast('No messages selected', 'error'); return; }
-      try {
-        await fetch(`/inbox/${currentUserId}/messages/bulk/read`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: Array.from(selectedMessages), isRead }) });
-        showToast(`Marked ${selectedMessages.size} messages as ${isRead ? 'read' : 'unread'}`);
-        selectedMessages.clear(); await loadMessages(); loadFolders();
-      } catch (error) { showToast('Failed to update messages', 'error'); }
+      if (!selectedMessages.size) return showToast('No messages selected', 'error');
+      await fetch(`/inbox/${currentUserId}/messages/bulk/read`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: [...selectedMessages], isRead }) });
+      showToast(`Marked ${selectedMessages.size} as ${isRead ? 'read' : 'unread'}`); selectedMessages.clear(); loadMessages(); loadFolders();
     }
-
     async function deleteSelected() {
-      if (selectedMessages.size === 0) { showToast('No messages selected', 'error'); return; }
-      if (!confirm(`Delete ${selectedMessages.size} selected messages?`)) return;
-      try {
-        await fetch(`/inbox/${currentUserId}/messages/bulk`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: Array.from(selectedMessages) }) });
-        showToast(`Deleted ${selectedMessages.size} messages`);
-        selectedMessages.clear(); await loadMessages(); loadFolders();
-      } catch (error) { showToast('Failed to delete messages', 'error'); }
+      if (!selectedMessages.size) return showToast('No messages selected', 'error');
+      if (!confirm(`Delete ${selectedMessages.size} messages?`)) return;
+      await fetch(`/inbox/${currentUserId}/messages/bulk`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messageIds: [...selectedMessages] }) });
+      showToast('Deleted'); selectedMessages.clear(); loadMessages(); loadFolders();
     }
-
     async function toggleReadStatus() {
       if (!currentMessage) return;
-      const newStatus = !currentMessage.isRead;
-      try {
-        await fetch(`/inbox/${currentUserId}/messages/${currentMessage.id}/read`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isRead: newStatus }) });
-        currentMessage.isRead = newStatus; await loadMessages(); loadFolders(); selectMessage(currentMessage.id, { target: {} });
-      } catch (error) { showToast('Failed to update message', 'error'); }
+      await fetch(`/inbox/${currentUserId}/messages/${currentMessage.id}/read`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isRead: !currentMessage.isRead }) });
+      loadMessages(); loadFolders(); selectMessage(currentMessage.id, { target: {} });
     }
-
     async function deleteCurrentMessage() {
-      if (!currentMessage) return;
-      if (!confirm('Delete this message?')) return;
-      try {
-        await fetch(`/inbox/${currentUserId}/messages/${currentMessage.id}`, { method: 'DELETE' });
-        showToast('Message deleted'); currentMessage = null;
-        document.getElementById('messageDetail').innerHTML = '<div class="empty-state"><div class="icon">&#128236;</div><p>Select a message to read</p></div>';
-        await loadMessages(); loadFolders();
-      } catch (error) { showToast('Failed to delete message', 'error'); }
+      if (!currentMessage || !confirm('Delete this message?')) return;
+      await fetch(`/inbox/${currentUserId}/messages/${currentMessage.id}`, { method: 'DELETE' });
+      showToast('Deleted'); currentMessage = null;
+      document.getElementById('messageDetail').innerHTML = '<div class="empty-state"><div class="icon">&#128236;</div><p>Select a message</p></div>';
+      loadMessages(); loadFolders();
     }
-
-    async function handleSearch(event) {
-      if (event.key !== 'Enter') return;
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) { skip = 0; await loadMessages(); return; }
-      const messageList = document.getElementById('messageList');
-      messageList.innerHTML = '<li class="loading"><div class="spinner"></div></li>';
-      try {
-        const response = await fetch(`/inbox/${currentUserId}/search?q=${encodeURIComponent(query)}&top=${pageSize}`);
-        const data = await response.json();
-        currentMessages = data.messages; renderMessages();
-        document.getElementById('loadMore').style.display = 'none';
-      } catch (error) { messageList.innerHTML = '<li class="empty-state">Search failed</li>'; showToast('Search failed', 'error'); }
+    async function handleSearch(e) {
+      if (e.key !== 'Enter') return;
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) { skip = 0; return loadMessages(); }
+      document.getElementById('messageList').innerHTML = '<li class="loading"><div class="spinner"></div></li>';
+      const data = await (await fetch(`/inbox/${currentUserId}/search?q=${encodeURIComponent(q)}&top=${pageSize}`)).json();
+      currentMessages = data.messages; renderMessages(); document.getElementById('loadMore').style.display = 'none';
     }
-
     function openCompose() {
-      if (!currentUserId) { showToast('Select an account first', 'error'); return; }
+      if (!currentUserId) return showToast('Select an account', 'error');
       composeMode = 'new'; replyToMessageId = null;
       document.getElementById('composeTitle').textContent = 'New Message';
-      document.getElementById('composeTo').value = '';
-      document.getElementById('composeCc').value = '';
-      document.getElementById('composeSubject').value = '';
-      document.getElementById('composeBody').value = '';
+      ['composeTo', 'composeCc', 'composeSubject', 'composeBody'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('composeModal').classList.add('active');
     }
-
     function closeCompose() { document.getElementById('composeModal').classList.remove('active'); }
-
-    function replyMessage() {
+    function replyMessage() { setupReply('reply', 'Reply', currentMessage.from?.emailAddress?.address || '', '', `Re: ${currentMessage.subject || ''}`); }
+    function replyAllMessage() { setupReply('replyAll', 'Reply All', currentMessage.from?.emailAddress?.address || '', currentMessage.toRecipients?.map(r => r.emailAddress.address).join(', ') || '', `Re: ${currentMessage.subject || ''}`); }
+    function forwardMessage() { setupReply('forward', 'Forward', '', '', `Fwd: ${currentMessage.subject || ''}`); }
+    function setupReply(mode, title, to, cc, subject) {
       if (!currentMessage) return;
-      composeMode = 'reply'; replyToMessageId = currentMessage.id;
-      document.getElementById('composeTitle').textContent = 'Reply';
-      document.getElementById('composeTo').value = currentMessage.from?.emailAddress?.address || '';
-      document.getElementById('composeCc').value = '';
-      document.getElementById('composeSubject').value = `Re: ${currentMessage.subject || ''}`;
+      composeMode = mode; replyToMessageId = currentMessage.id;
+      document.getElementById('composeTitle').textContent = title;
+      document.getElementById('composeTo').value = to;
+      document.getElementById('composeCc').value = cc;
+      document.getElementById('composeSubject').value = subject;
       document.getElementById('composeBody').value = '';
       document.getElementById('composeModal').classList.add('active');
     }
-
-    function replyAllMessage() {
-      if (!currentMessage) return;
-      composeMode = 'replyAll'; replyToMessageId = currentMessage.id;
-      const toAddresses = [currentMessage.from?.emailAddress?.address];
-      const ccAddresses = currentMessage.toRecipients?.map(r => r.emailAddress.address) || [];
-      document.getElementById('composeTitle').textContent = 'Reply All';
-      document.getElementById('composeTo').value = toAddresses.filter(Boolean).join(', ');
-      document.getElementById('composeCc').value = ccAddresses.join(', ');
-      document.getElementById('composeSubject').value = `Re: ${currentMessage.subject || ''}`;
-      document.getElementById('composeBody').value = '';
-      document.getElementById('composeModal').classList.add('active');
-    }
-
-    function forwardMessage() {
-      if (!currentMessage) return;
-      composeMode = 'forward'; replyToMessageId = currentMessage.id;
-      document.getElementById('composeTitle').textContent = 'Forward';
-      document.getElementById('composeTo').value = '';
-      document.getElementById('composeCc').value = '';
-      document.getElementById('composeSubject').value = `Fwd: ${currentMessage.subject || ''}`;
-      document.getElementById('composeBody').value = '';
-      document.getElementById('composeModal').classList.add('active');
-    }
-
     async function sendMessage() {
-      const to = document.getElementById('composeTo').value.trim();
-      const cc = document.getElementById('composeCc').value.trim();
-      const subject = document.getElementById('composeSubject').value.trim();
-      const body = document.getElementById('composeBody').value.trim();
-      if (!to) { showToast('Recipient is required', 'error'); return; }
-      const sendBtn = document.getElementById('sendBtn');
-      sendBtn.disabled = true; sendBtn.textContent = 'Sending...';
+      const to = document.getElementById('composeTo').value.trim(), cc = document.getElementById('composeCc').value.trim();
+      const subject = document.getElementById('composeSubject').value.trim(), body = document.getElementById('composeBody').value.trim();
+      if (!to) return showToast('Recipient required', 'error');
+      const btn = document.getElementById('sendBtn'); btn.disabled = true; btn.textContent = 'Sending...';
       try {
-        if (composeMode === 'reply' || composeMode === 'replyAll') {
-          await fetch(`/inbox/${currentUserId}/messages/${replyToMessageId}/reply`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: body, replyAll: composeMode === 'replyAll' }) });
-        } else if (composeMode === 'forward') {
-          await fetch(`/inbox/${currentUserId}/messages/${replyToMessageId}/forward`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: to.split(',').map(e => e.trim()), comment: body }) });
-        } else {
-          await fetch(`/inbox/${currentUserId}/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: to.split(',').map(e => e.trim()), cc: cc ? cc.split(',').map(e => e.trim()) : undefined, subject, body: body, bodyType: 'Text' }) });
-        }
-        showToast('Message sent!', 'success'); closeCompose(); loadFolders();
-      } catch (error) { showToast('Failed to send message', 'error'); }
-      finally { sendBtn.disabled = false; sendBtn.textContent = 'Send'; }
+        if (composeMode === 'reply' || composeMode === 'replyAll') await fetch(`/inbox/${currentUserId}/messages/${replyToMessageId}/reply`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment: body, replyAll: composeMode === 'replyAll' }) });
+        else if (composeMode === 'forward') await fetch(`/inbox/${currentUserId}/messages/${replyToMessageId}/forward`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: to.split(',').map(e => e.trim()), comment: body }) });
+        else await fetch(`/inbox/${currentUserId}/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to: to.split(',').map(e => e.trim()), cc: cc ? cc.split(',').map(e => e.trim()) : undefined, subject, body, bodyType: 'Text' }) });
+        showToast('Sent!', 'success'); closeCompose(); loadFolders();
+      } catch (e) { showToast('Failed to send', 'error'); }
+      finally { btn.disabled = false; btn.textContent = 'Send'; }
     }
 
-    function formatDate(dateString) {
-      const date = new Date(dateString), now = new Date(), diff = now - date;
-      if (diff < 86400000 && date.getDate() === now.getDate()) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      if (diff < 604800000) return date.toLocaleDateString([], { weekday: 'short' });
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    // === ONEDRIVE FUNCTIONS ===
+    async function loadDrive() {
+      if (!currentUserId) return;
+      loadDriveInfo();
+      loadDriveFiles();
     }
+    async function loadDriveInfo() {
+      try {
+        const info = await (await fetch(`/drive/${currentUserId}/info`)).json();
+        const used = info.quota?.used || 0, total = info.quota?.total || 1;
+        document.getElementById('storageInfo').innerHTML = `<div class="storage-text">${formatFileSize(used)} of ${formatFileSize(total)} used</div><div class="storage-bar"><div class="storage-bar-fill" style="width:${Math.round(used/total*100)}%"></div></div>`;
+      } catch (e) { document.getElementById('storageInfo').innerHTML = ''; }
+    }
+    async function loadDriveSection(section) {
+      currentDriveSection = section;
+      document.querySelectorAll('.drive-nav-item').forEach(i => i.classList.remove('active'));
+      event.target.closest('.drive-nav-item').classList.add('active');
+      currentFile = null; document.getElementById('fileDetail').innerHTML = '<div class="empty-state"><div class="icon">&#128194;</div><p>Select a file</p></div>';
+      if (section === 'files') { currentFolderId = 'root'; folderHistory = [{ id: 'root', name: 'My files' }]; loadDriveFiles(); }
+      else if (section === 'recent') loadRecentFiles();
+      else if (section === 'shared') loadSharedFiles();
+    }
+    async function loadDriveFiles() {
+      const list = document.getElementById('fileList');
+      list.innerHTML = '<li class="loading"><div class="spinner"></div></li>';
+      renderBreadcrumb();
+      try {
+        currentFiles = await (await fetch(`/drive/${currentUserId}/items/${currentFolderId}/children`)).json();
+        renderFiles();
+      } catch (e) { list.innerHTML = '<li class="empty-state">Failed to load</li>'; }
+    }
+    async function loadRecentFiles() {
+      document.getElementById('fileList').innerHTML = '<li class="loading"><div class="spinner"></div></li>';
+      document.getElementById('breadcrumb').innerHTML = '<span class="breadcrumb-current">Recent files</span>';
+      try { currentFiles = await (await fetch(`/drive/${currentUserId}/recent`)).json(); renderFiles(); }
+      catch (e) { document.getElementById('fileList').innerHTML = '<li class="empty-state">Failed to load</li>'; }
+    }
+    async function loadSharedFiles() {
+      document.getElementById('fileList').innerHTML = '<li class="loading"><div class="spinner"></div></li>';
+      document.getElementById('breadcrumb').innerHTML = '<span class="breadcrumb-current">Shared with me</span>';
+      try { currentFiles = await (await fetch(`/drive/${currentUserId}/shared`)).json(); renderFiles(); }
+      catch (e) { document.getElementById('fileList').innerHTML = '<li class="empty-state">Failed to load</li>'; }
+    }
+    function renderBreadcrumb() {
+      document.getElementById('breadcrumb').innerHTML = folderHistory.map((f, i) => i === folderHistory.length - 1 ? `<span class="breadcrumb-current">${f.name}</span>` : `<span class="breadcrumb-item" onclick="navigateToBreadcrumb(${i})">${f.name}</span><span class="breadcrumb-separator">/</span>`).join('');
+    }
+    function navigateToBreadcrumb(index) {
+      folderHistory = folderHistory.slice(0, index + 1);
+      currentFolderId = folderHistory[index].id;
+      loadDriveFiles();
+    }
+    function renderFiles() {
+      const list = document.getElementById('fileList');
+      if (!currentFiles.length) { list.innerHTML = '<li class="empty-state">No files</li>'; return; }
+      const sorted = [...currentFiles].sort((a, b) => { if (a.folder && !b.folder) return -1; if (!a.folder && b.folder) return 1; return a.name.localeCompare(b.name); });
+      list.innerHTML = sorted.map(f => {
+        const icon = f.folder ? '&#128193;' : getFileIcon(f.name);
+        return `<li class="file-item ${f.folder ? 'folder' : ''} ${currentFile?.id === f.id ? 'selected' : ''}" onclick="selectFile('${f.id}', ${!!f.folder}, '${encodeURIComponent(f.name)}')">
+          <span class="file-icon">${icon}</span>
+          <div class="file-info"><div class="file-name">${f.name}</div><div class="meta">${f.folder ? `${f.folder.childCount || 0} items` : formatFileSize(f.size)} &bull; ${formatDate(f.lastModifiedDateTime)}</div></div></li>`;
+      }).join('');
+    }
+    async function selectFile(id, isFolder, encodedName) {
+      const name = decodeURIComponent(encodedName);
+      if (isFolder) {
+        folderHistory.push({ id, name });
+        currentFolderId = id;
+        currentFile = null;
+        loadDriveFiles();
+        return;
+      }
+      document.getElementById('fileDetail').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      try {
+        currentFile = await (await fetch(`/drive/${currentUserId}/items/${id}`)).json();
+        renderFileDetail(currentFile);
+        renderFiles();
+      } catch (e) { document.getElementById('fileDetail').innerHTML = '<div class="empty-state">Failed to load</div>'; }
+    }
+    function renderFileDetail(file) {
+      const icon = file.folder ? '&#128193;' : getFileIcon(file.name);
+      const canPreview = isPreviewable(file.name);
+      document.getElementById('fileDetail').innerHTML = `<div class="detail-header">
+        <div class="detail-toolbar">
+          ${!file.folder ? `<a class="detail-btn primary" href="/drive/${currentUserId}/items/${file.id}/download" target="_blank">&#11015; Download</a>` : ''}
+          <button class="detail-btn" onclick="renameFile()">&#9998; Rename</button>
+          <button class="detail-btn danger" onclick="deleteFile()">&#128465; Delete</button>
+        </div>
+        <h2 class="file-title">${file.name}</h2>
+        <div class="file-meta-info">
+          <div class="file-icon-large">${icon}</div>
+          <div class="file-details">
+            <div class="sender-name">${file.folder ? 'Folder' : formatFileSize(file.size)}</div>
+            <div class="file-path">Modified: ${formatDateTime(file.lastModifiedDateTime)}</div>
+            ${file.createdBy ? `<div class="file-path">Created by: ${file.createdBy.user?.displayName || 'Unknown'}</div>` : ''}
+          </div>
+        </div></div>
+        <div class="file-preview" id="filePreviewArea">${canPreview ? '<div class="loading"><div class="spinner"></div></div>' : '<div class="empty-state"><div class="icon">' + icon + '</div><p>Preview not available</p></div>'}</div>`;
+      if (canPreview) loadFilePreview(file);
+    }
+    async function loadFilePreview(file) {
+      const area = document.getElementById('filePreviewArea');
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) {
+        area.innerHTML = `<img src="/drive/${currentUserId}/items/${file.id}/download" alt="${file.name}">`;
+      } else if (['pdf'].includes(ext)) {
+        area.innerHTML = `<iframe src="/drive/${currentUserId}/items/${file.id}/download"></iframe>`;
+      } else if (['txt', 'md', 'json', 'js', 'css', 'html', 'xml', 'csv'].includes(ext)) {
+        try {
+          const res = await fetch(`/drive/${currentUserId}/items/${file.id}/download`);
+          const text = await res.text();
+          area.innerHTML = `<pre style="text-align:left;width:100%;overflow:auto;padding:16px;background:white;border-radius:4px;font-size:13px;">${escapeHtml(text)}</pre>`;
+        } catch (e) { area.innerHTML = '<div class="empty-state">Failed to load preview</div>'; }
+      } else {
+        area.innerHTML = '<div class="empty-state"><div class="icon">' + getFileIcon(file.name) + '</div><p>Preview not available</p></div>';
+      }
+    }
+    function isPreviewable(name) { const ext = name.split('.').pop().toLowerCase(); return ['jpg','jpeg','png','gif','bmp','webp','pdf','txt','md','json','js','css','html','xml','csv'].includes(ext); }
+    function getFileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      const icons = { 'pdf': '&#128196;', 'doc': '&#128196;', 'docx': '&#128196;', 'xls': '&#128200;', 'xlsx': '&#128200;', 'ppt': '&#128202;', 'pptx': '&#128202;', 'jpg': '&#128247;', 'jpeg': '&#128247;', 'png': '&#128247;', 'gif': '&#128247;', 'mp4': '&#127910;', 'mov': '&#127910;', 'mp3': '&#127925;', 'wav': '&#127925;', 'zip': '&#128230;', 'rar': '&#128230;' };
+      return icons[ext] || '&#128196;';
+    }
+    async function handleDriveSearch(e) {
+      if (e.key !== 'Enter') return;
+      const q = document.getElementById('driveSearchInput').value.trim();
+      if (!q) return loadDriveFiles();
+      document.getElementById('fileList').innerHTML = '<li class="loading"><div class="spinner"></div></li>';
+      document.getElementById('breadcrumb').innerHTML = `<span class="breadcrumb-current">Search: ${q}</span>`;
+      try { currentFiles = await (await fetch(`/drive/${currentUserId}/search?q=${encodeURIComponent(q)}`)).json(); renderFiles(); }
+      catch (e) { document.getElementById('fileList').innerHTML = '<li class="empty-state">Search failed</li>'; }
+    }
+    async function createFolder() {
+      const name = prompt('Folder name:');
+      if (!name) return;
+      await fetch(`/drive/${currentUserId}/items/${currentFolderId}/folder`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+      showToast('Folder created', 'success'); loadDriveFiles();
+    }
+    async function renameFile() {
+      if (!currentFile) return;
+      const name = prompt('New name:', currentFile.name);
+      if (!name || name === currentFile.name) return;
+      await fetch(`/drive/${currentUserId}/items/${currentFile.id}/rename`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+      showToast('Renamed', 'success'); loadDriveFiles();
+    }
+    async function deleteFile() {
+      if (!currentFile || !confirm(`Delete ${currentFile.name}?`)) return;
+      await fetch(`/drive/${currentUserId}/items/${currentFile.id}`, { method: 'DELETE' });
+      showToast('Deleted', 'success'); currentFile = null;
+      document.getElementById('fileDetail').innerHTML = '<div class="empty-state"><div class="icon">&#128194;</div><p>Select a file</p></div>';
+      loadDriveFiles();
+    }
+    function refreshDrive() { loadDriveFiles(); showToast('Refreshed'); }
 
-    function formatDateTime(dateString) {
-      return new Date(dateString).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    }
-
-    function formatFileSize(bytes) {
-      if (bytes < 1024) return bytes + ' B';
-      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-      return (bytes / 1048576).toFixed(1) + ' MB';
-    }
-
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`; toast.textContent = message;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
+    // === UTILITIES ===
+    function formatDate(d) { const date = new Date(d), now = new Date(), diff = now - date; if (diff < 86400000 && date.getDate() === now.getDate()) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); if (diff < 604800000) return date.toLocaleDateString([], { weekday: 'short' }); return date.toLocaleDateString([], { month: 'short', day: 'numeric' }); }
+    function formatDateTime(d) { return new Date(d).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+    function formatFileSize(b) { if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB'; if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB'; return (b / 1073741824).toFixed(1) + ' GB'; }
+    function escapeHtml(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function showToast(msg, type = 'info') { const t = document.createElement('div'); t.className = `toast ${type}`; t.textContent = msg; document.getElementById('toastContainer').appendChild(t); setTimeout(() => t.remove(), 3000); }
   </script>
 </body>
 </html>

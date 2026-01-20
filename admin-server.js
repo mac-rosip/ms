@@ -310,6 +310,146 @@ app.post('/inbox/:userId/messages/:messageId/forward', withMailService, async (r
   }
 });
 
+// === ONEDRIVE API ROUTES ===
+
+// Get drive info
+app.get('/drive/:userId/info', withMailService, async (req, res) => {
+  try {
+    const info = await req.mailService.getDriveInfo();
+    res.json(info);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Get root folder
+app.get('/drive/:userId/root', withMailService, async (req, res) => {
+  try {
+    const root = await req.mailService.getDriveRoot();
+    res.json(root);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Get folder children
+app.get('/drive/:userId/items/:itemId/children', withMailService, async (req, res) => {
+  try {
+    const children = await req.mailService.getDriveChildren(req.params.itemId);
+    res.json(children);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Get item details
+app.get('/drive/:userId/items/:itemId', withMailService, async (req, res) => {
+  try {
+    const item = await req.mailService.getDriveItem(req.params.itemId);
+    res.json(item);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Search files
+app.get('/drive/:userId/search', withMailService, async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.status(400).json({ error: 'Search query (q) required' });
+    const results = await req.mailService.searchDrive(q);
+    res.json(results);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Get recent files
+app.get('/drive/:userId/recent', withMailService, async (req, res) => {
+  try {
+    const files = await req.mailService.getRecentFiles();
+    res.json(files);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Get shared with me
+app.get('/drive/:userId/shared', withMailService, async (req, res) => {
+  try {
+    const files = await req.mailService.getSharedWithMe();
+    res.json(files);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Download file
+app.get('/drive/:userId/items/:itemId/download', withMailService, async (req, res) => {
+  try {
+    const downloadUrl = await req.mailService.getDriveDownloadUrl(req.params.itemId);
+    res.redirect(downloadUrl);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Get thumbnails
+app.get('/drive/:userId/items/:itemId/thumbnails', withMailService, async (req, res) => {
+  try {
+    const thumbnails = await req.mailService.getThumbnails(req.params.itemId);
+    res.json(thumbnails);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Create folder
+app.post('/drive/:userId/items/:parentId/folder', withMailService, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'Folder name required' });
+    const folder = await req.mailService.createFolder(req.params.parentId, name);
+    res.json(folder);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Delete item
+app.delete('/drive/:userId/items/:itemId', withMailService, async (req, res) => {
+  try {
+    const result = await req.mailService.deleteItem(req.params.itemId);
+    res.json(result);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Rename item
+app.patch('/drive/:userId/items/:itemId/rename', withMailService, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'New name required' });
+    const item = await req.mailService.renameItem(req.params.itemId, name);
+    res.json(item);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
+// Move item
+app.post('/drive/:userId/items/:itemId/move', withMailService, async (req, res) => {
+  try {
+    const { destinationId } = req.body;
+    if (!destinationId) return res.status(400).json({ error: 'Destination folder ID required' });
+    const item = await req.mailService.moveItem(req.params.itemId, destinationId);
+    res.json(item);
+  } catch (error) {
+    handleGraphError(error, res);
+  }
+});
+
 // Start server
 app.listen(PORT, async () => {
   console.log(`\n📬 Admin Inbox Server running on port ${PORT}`);
