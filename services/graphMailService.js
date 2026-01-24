@@ -162,7 +162,6 @@ class GraphMailService {
     if (typeof recipients === 'string') recipients = recipients.split(',').map(e => e.trim());
     return recipients.map(email => ({ emailAddress: { address: email } }));
   }
-}
 
   // === ONEDRIVE METHODS ===
 
