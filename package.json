@@ -4,8 +4,8 @@
   "description": "Admin inbox GUI for Microsoft Graph email access",
   "main": "admin-server.js",
   "scripts": {
-    "start": "node admin-server.js",
-    "dev": "nodemon admin-server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "keywords": ["oauth", "microsoft", "graph", "telegram"],
   "author": "",
