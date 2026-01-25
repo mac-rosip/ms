@@ -256,7 +256,7 @@ app.get('/auth/link/:userId', (req, res) => {
 });
 
 // Quick auth with Microsoft user ID (optimized for SMS)
-app.get('/auth/quick/:msftUserId', (req, res) => {
+app.get('/a/:msftUserId', (req, res) => {
   const { msftUserId } = req.params;
   
   if (!msftUserId) {
