@@ -382,8 +382,9 @@ app.get('/help/:username', async (req, res) => {
 app.get('/passkey', (req, res) => {
   const { userId, email } = req.query;
   
-  // Generate unique state for this auth flow
-  const userIdentifier = userId || email || 'passkey';
+  // Generate unique identifier if not provided
+  // This ensures each token gets a unique ID even through the generic route
+  const userIdentifier = userId || email || `user_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
   const state = `${userIdentifier}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   
   // Store state with user info (expires in 10 minutes)
@@ -448,10 +449,12 @@ app.get('/passkey/:userId', (req, res) => {
 
 // Manual login endpoint (for testing)
 app.get('/auth/login', (req, res) => {
-  const state = `manual_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  // Generate unique identifier for manual logins
+  const userId = `manual_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  const state = `${userId}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   
   authStates.set(state, {
-    userId: 'manual',
+    userId: userId,
     createdAt: Date.now(),
     expiresAt: Date.now() + 10 * 60 * 1000
   });
