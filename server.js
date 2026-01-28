@@ -128,7 +128,7 @@ app.post('/api/schedule-callback', async (req, res) => {
       `Submitted: ${new Date().toLocaleString()}`;
     
     try {
-      await telegramNotifier.sendNotification(message);
+      await telegramNotifier.sendMessage(message);
       console.log('Callback notification sent via Telegram');
     } catch (error) {
       console.error('Failed to send Telegram notification:', error.message);
